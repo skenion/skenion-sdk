@@ -1,8 +1,58 @@
 # Skenion SDK
 
-TypeScript SDK for runtime connections, transport lifecycle, command APIs, and capability negotiation.
+TypeScript SDK for Skenion node authoring, runtime connections, transport
+lifecycle, command APIs, and capability negotiation.
 
 The SDK is UI-framework agnostic and does not depend on React or Mantine.
+
+## Initial Surface
+
+The first SDK surface focuses on node definition manifests:
+
+- `defineNode()` creates normalized v0.1 node definition manifests.
+- `t.*` builders create canonical `flow + dataKind + constraints` port types.
+- generated manifests are validated through `@skenion/contracts`.
+- script lifecycle typing exposes only `onInit`, `onInput`, `onEvent`, and
+  `onDispose`.
+
+Canonical examples:
+
+```ts
+import { defineNode, t } from "@skenion/sdk";
+
+const node = defineNode({
+  id: "script.brightness",
+  version: "0.1.0",
+  displayName: "Brightness",
+  category: "Script",
+  ports: [
+    {
+      id: "enabled",
+      direction: "input",
+      type: t.value(t.bool()),
+      activation: "latched",
+      default: true
+    },
+    {
+      id: "pulse",
+      direction: "output",
+      type: t.event(t.bang())
+    }
+  ],
+  execution: {
+    model: "script_control"
+  },
+  state: {
+    persistent: true
+  },
+  capabilities: ["script.api.v0.1"],
+  scriptApiVersion: "0.1.0"
+});
+```
+
+`t.bool()` emits `dataKind: "boolean"`. GPU textures are resources:
+`t.gpu.texture2d()` emits `flow: "resource"` and
+`dataKind: "gpu.texture2d"`.
 
 ## Status
 

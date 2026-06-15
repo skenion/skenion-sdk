@@ -1,0 +1,32 @@
+{
+  "name": "@skenion/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Skenion node authoring and runtime clients",
+  "type": "module",
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "ci": "pnpm run build && pnpm run test",
+    "test": "node --test test/*.test.mjs"
+  },
+  "peerDependencies": {
+    "@skenion/contracts": "^0.1.0"
+  },
+  "devDependencies": {
+    "@skenion/contracts": "file:.deps/skenion-contracts/packages/ts",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.12.4"
+}
