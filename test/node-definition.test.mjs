@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   SkenionNodeDefinitionError,
+  SkenionExtensionManifestError,
+  defineExtensionPackage,
   defineNode,
   t
 } from "../dist/index.js";
@@ -128,6 +130,76 @@ test("defineNode rejects unsupported permissions", () => {
         ]
       }),
     SkenionNodeDefinitionError
+  );
+});
+
+test("defineExtensionPackage returns a validated package manifest", () => {
+  const node = defineNode({
+    id: "core.value",
+    version: "0.1.0",
+    displayName: "Value",
+    category: "Core",
+    execution: {
+      model: "value"
+    },
+    ports: [
+      {
+        id: "out",
+        direction: "output",
+        type: t.value(t.f32())
+      }
+    ]
+  });
+
+  const manifest = defineExtensionPackage({
+    id: "skenion/core",
+    version: "0.1.0",
+    kind: "core-package",
+    nodes: [node],
+    help: [
+      {
+        nodeId: "core.value",
+        markdownPath: "help/value.md"
+      }
+    ],
+    tests: [
+      {
+        id: "value-baseline",
+        kind: "node",
+        target: "core.value",
+        fixturePath: "tests/value.input.json",
+        expectedPath: "tests/value.expected.json"
+      }
+    ]
+  });
+
+  assert.equal(manifest.schema, "skenion.extension.manifest");
+  assert.equal(manifest.runtimeAbiVersion, "0.1.0");
+  assert.equal(manifest.provides.nodes?.[0].id, "core.value");
+  assert.equal(manifest.provides.help?.[0].markdownPath, "help/value.md");
+  assert.equal(manifest.tests?.[0].id, "value-baseline");
+});
+
+test("defineExtensionPackage rejects invalid native ABI declarations", () => {
+  assert.throws(
+    () =>
+      defineExtensionPackage({
+        id: "example/native",
+        version: "0.1.0",
+        kind: "native-runtime",
+        native: {
+          entrypoint: "skenion_extension_init",
+          artifacts: [
+            {
+              os: "macos",
+              arch: "aarch64",
+              abi: "rust",
+              path: "target/release/libexample.dylib"
+            }
+          ]
+        }
+      }),
+    SkenionExtensionManifestError
   );
 });
 
