@@ -1,9 +1,21 @@
 name: Release Please
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      release-as:
+        description: Exact SemVer version to release, for example 0.43.0.
+        required: true
+        type: string
+      train-version:
+        description: Lockstep train version. Must match release-as.
+        required: true
+        type: string
+      release-train-mode:
+        description: Release train mode. Only publish runs Release Please.
+        required: false
+        default: publish
+        type: string
 
 permissions:
   contents: write
@@ -17,6 +29,35 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      - id: train
+        name: Validate release train inputs
+        shell: bash
+        env:
+          RELEASE_AS: ${{ inputs['release-as'] }}
+          TRAIN_VERSION: ${{ inputs['train-version'] }}
+          RELEASE_TRAIN_MODE: ${{ inputs['release-train-mode'] }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${RELEASE_TRAIN_MODE}" != "publish" ]]; then
+            echo "::notice::release-train-mode=${RELEASE_TRAIN_MODE}; skipping Release Please for non-publish train mode."
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          if [[ "${RELEASE_AS}" != "${TRAIN_VERSION}" ]]; then
+            echo "release-as (${RELEASE_AS}) must match train-version (${TRAIN_VERSION})" >&2
+            exit 1
+          fi
+
+          if ! [[ "${RELEASE_AS}" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "release-as (${RELEASE_AS}) must be SemVer-like x.y.z" >&2
+            exit 1
+          fi
+
+          echo "publish=true" >> "${GITHUB_OUTPUT}"
       - uses: googleapis/release-please-action@v5
+        if: steps.train.outputs.publish == 'true'
         with:
           token: ${{ secrets.SKENION_RELEASE_PLEASE_TOKEN || secrets.CI_TOKEN }}
+          release-as: ${{ inputs['release-as'] }}
