@@ -1,13 +1,13 @@
-# Skenion SDK
+# skenion SDK
 
-TypeScript SDK for Skenion node authoring, runtime connections, transport
+TypeScript SDK for skenion node authoring, runtime connections, transport
 lifecycle, command APIs, and capability negotiation.
 
 The SDK is UI-framework agnostic and does not depend on React or Mantine.
 
 ## Current Authoring Surface
 
-The primary SDK authoring surface targets the current Skenion `0.1` graph,
+The primary SDK authoring surface targets the current skenion `0.1` graph,
 project, patch-library, graph-fragment, and package contracts:
 
 - `defineGraphDocument()` creates normalized current `0.1` graph documents.
@@ -190,10 +190,10 @@ const operation = createPasteGraphFragmentOperation({
 
 ## Status
 
-Bootstrap repository for the Skenion project. Implementation follows the public architecture and release rules defined in [EchoVisionLab/skenion](https://github.com/echovisionlab/skenion).
+Bootstrap repository for the skenion project. Implementation follows the public architecture and release rules defined in [skenion/skenion](https://github.com/skenion/skenion).
 
 ## License And Credit
 
 This repository is licensed under the Apache License, Version 2.0.
 
-Redistributions must preserve copyright, license, and NOTICE information as required by Apache-2.0. If Skenion helps your artwork, research, publication, installation, or tool, please credit Skenion and EchoVisionLab.
+Redistributions must preserve copyright, license, and NOTICE information as required by Apache-2.0. If skenion helps your artwork, research, publication, installation, or tool, please credit skenion and the skenion contributors.

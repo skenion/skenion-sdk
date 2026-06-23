@@ -110,7 +110,7 @@ export class SkenionRuntimeCollaborationError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion Runtime collaboration value: ${errors.join("; ")}`);
+    super(`Invalid skenion runtime collaboration value: ${errors.join("; ")}`);
     this.name = "SkenionRuntimeCollaborationError";
     this.errors = errors;
   }

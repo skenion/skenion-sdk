@@ -33,7 +33,7 @@ export class SkenionExtensionManifestError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion extension manifest: ${errors.join("; ")}`);
+    super(`Invalid skenion extension manifest: ${errors.join("; ")}`);
     this.name = "SkenionExtensionManifestError";
     this.errors = errors;
   }

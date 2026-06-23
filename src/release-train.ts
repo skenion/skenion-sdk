@@ -1,7 +1,6 @@
 import { validateReleaseTrainManifestV01 } from "@skenion/contracts";
 import type {
   ReleaseTrainManifestV01,
-  ReleaseTrainTargetArtifactMapV01,
   ReleaseTrainTargetV01
 } from "@skenion/contracts";
 
@@ -23,6 +22,8 @@ export type ReleaseTrainDiagnosticCode =
   | "examples_version_mismatch"
   | "manual_version_mismatch"
   | "missing_runtime_artifact"
+  | "missing_studio_web_bundle"
+  | "missing_studio_desktop_package"
   | "missing_studio_sidecar"
   | "non_exact_contracts_dependency";
 
@@ -51,6 +52,7 @@ export interface ValidateReleaseTrainManifestOptions {
   contractsPackageVersion?: string;
   contractsDependencyRange?: string;
   requiredRuntimeTargets?: readonly ReleaseTrainTargetV01[];
+  requiredStudioDesktopTargets?: readonly ReleaseTrainTargetV01[];
   requiredStudioSidecarTargets?: readonly ReleaseTrainTargetV01[];
 }
 
@@ -66,13 +68,37 @@ export type ReleaseTrainManifestValidationResult =
       value?: ReleaseTrainManifestV01;
     };
 
+interface ReleaseTrainVersionedArtifactForSdk {
+  id?: string;
+  version: string;
+}
+
+type ReleaseTrainTargetArtifactMapForSdk = Partial<
+  Record<ReleaseTrainTargetV01, ReleaseTrainVersionedArtifactForSdk>
+>;
+
+interface ReleaseTrainRuntimeComponentForSdk {
+  binaries?: ReleaseTrainTargetArtifactMapForSdk;
+}
+
+interface ReleaseTrainStudioComponentForSdk {
+  "web-bundle"?: ReleaseTrainVersionedArtifactForSdk;
+  desktopPackages?: ReleaseTrainTargetArtifactMapForSdk;
+  runtimeSidecars?: ReleaseTrainTargetArtifactMapForSdk;
+}
+
+interface ReleaseTrainComponentsForSdk {
+  runtime?: ReleaseTrainRuntimeComponentForSdk;
+  studio?: ReleaseTrainStudioComponentForSdk;
+}
+
 export class SkenionReleaseTrainManifestError extends Error {
   readonly diagnostics: ReleaseTrainDiagnostic[];
   readonly errors: string[];
 
   constructor(diagnostics: ReleaseTrainDiagnostic[]) {
     const errors = diagnostics.map((diagnostic) => diagnostic.message);
-    super(`Invalid Skenion release train manifest: ${errors.join("; ")}`);
+    super(`Invalid skenion release train manifest: ${errors.join("; ")}`);
     this.name = "SkenionReleaseTrainManifestError";
     this.diagnostics = diagnostics;
     this.errors = errors;
@@ -107,9 +133,13 @@ function versionDiagnostic(
   ];
 }
 
+function releaseTrainComponentsForSdk(manifest: ReleaseTrainManifestV01): ReleaseTrainComponentsForSdk {
+  return (manifest as unknown as { components: ReleaseTrainComponentsForSdk }).components;
+}
+
 function runtimeArtifactDiagnostics(
   trainVersion: string,
-  binaries: Partial<ReleaseTrainTargetArtifactMapV01> | undefined,
+  binaries: ReleaseTrainTargetArtifactMapForSdk | undefined,
   targets: readonly ReleaseTrainTargetV01[]
 ): ReleaseTrainDiagnostic[] {
   return targets.flatMap((target) => {
@@ -138,22 +168,50 @@ function runtimeArtifactDiagnostics(
   });
 }
 
-function studioSidecarDiagnostics(
+function webBundleDiagnostics(
   trainVersion: string,
-  sidecars: Partial<ReleaseTrainTargetArtifactMapV01> | undefined,
-  targets: readonly ReleaseTrainTargetV01[]
+  webBundle: ReleaseTrainVersionedArtifactForSdk | undefined
+): ReleaseTrainDiagnostic[] {
+  if (webBundle === undefined) {
+    return [
+      {
+        code: "missing_studio_web_bundle",
+        component: "studio",
+        field: `components.studio["web-bundle"]`,
+        expected: trainVersion,
+        message: `Studio web bundle artifact is required for train ${trainVersion}`
+      }
+    ];
+  }
+
+  return versionDiagnostic(
+    "studio_version_mismatch",
+    "studio",
+    `components.studio["web-bundle"].version`,
+    trainVersion,
+    webBundle.version
+  );
+}
+
+function studioTargetArtifactDiagnostics(
+  trainVersion: string,
+  artifacts: ReleaseTrainTargetArtifactMapForSdk | undefined,
+  targets: readonly ReleaseTrainTargetV01[],
+  missingCode: Extract<ReleaseTrainDiagnosticCode, "missing_studio_desktop_package" | "missing_studio_sidecar">,
+  fieldBase: "components.studio.desktopPackages" | "components.studio.runtimeSidecars",
+  missingMessage: (target: ReleaseTrainTargetV01) => string
 ): ReleaseTrainDiagnostic[] {
   return targets.flatMap((target) => {
-    const sidecar = sidecars?.[target];
-    if (sidecar === undefined) {
+    const artifact = artifacts?.[target];
+    if (artifact === undefined) {
       return [
         {
-          code: "missing_studio_sidecar",
+          code: missingCode,
           component: "studio",
-          field: `components.studio.runtimeSidecars.${target}`,
+          field: `${fieldBase}.${target}`,
           expected: trainVersion,
           target,
-          message: `Studio runtime sidecar for ${target} is required for train ${trainVersion}`
+          message: missingMessage(target)
         } satisfies ReleaseTrainDiagnostic
       ];
     }
@@ -161,9 +219,9 @@ function studioSidecarDiagnostics(
     return versionDiagnostic(
       "studio_version_mismatch",
       "studio",
-      "components.studio.runtimeSidecars.version",
+      `${fieldBase}.version`,
       trainVersion,
-      sidecar.version,
+      artifact.version,
       target
     );
   });
@@ -175,6 +233,7 @@ function componentVersionDiagnostics(
 ): ReleaseTrainDiagnostic[] {
   const trainVersion = manifest.trainVersion;
   const sdkPackageName = options.sdkPackageName ?? "@skenion/sdk";
+  const components = releaseTrainComponentsForSdk(manifest);
 
   return [
     ...versionDiagnostic(
@@ -191,16 +250,9 @@ function componentVersionDiagnostics(
       trainVersion,
       manifest.components.contracts.crate.version
     ),
-    ...versionDiagnostic(
-      "runtime_version_mismatch",
-      "runtime",
-      "components.runtime.crate.version",
-      trainVersion,
-      manifest.components.runtime.crate.version
-    ),
     ...runtimeArtifactDiagnostics(
       trainVersion,
-      manifest.components.runtime.binaries,
+      components.runtime?.binaries,
       options.requiredRuntimeTargets ?? RELEASE_TRAIN_TARGETS
     ),
     ...versionDiagnostic(
@@ -222,24 +274,22 @@ function componentVersionDiagnostics(
             message: `components.sdk.npm.name must be ${sdkPackageName}; received ${manifest.components.sdk.npm.name}`
           } satisfies ReleaseTrainDiagnostic
         ]),
-    ...versionDiagnostic(
-      "studio_version_mismatch",
-      "studio",
-      "components.studio.web.version",
+    ...webBundleDiagnostics(trainVersion, components.studio?.["web-bundle"]),
+    ...studioTargetArtifactDiagnostics(
       trainVersion,
-      manifest.components.studio.web.version
+      components.studio?.desktopPackages,
+      options.requiredStudioDesktopTargets ?? RELEASE_TRAIN_TARGETS,
+      "missing_studio_desktop_package",
+      "components.studio.desktopPackages",
+      (target) => `Studio desktop package artifact for ${target} is required for train ${trainVersion}`
     ),
-    ...versionDiagnostic(
-      "studio_version_mismatch",
-      "studio",
-      "components.studio.desktop.version",
+    ...studioTargetArtifactDiagnostics(
       trainVersion,
-      manifest.components.studio.desktop.version
-    ),
-    ...studioSidecarDiagnostics(
-      trainVersion,
-      manifest.components.studio.runtimeSidecars,
-      options.requiredStudioSidecarTargets ?? RELEASE_TRAIN_TARGETS
+      components.studio?.runtimeSidecars,
+      options.requiredStudioSidecarTargets ?? RELEASE_TRAIN_TARGETS,
+      "missing_studio_sidecar",
+      "components.studio.runtimeSidecars",
+      (target) => `Studio runtime sidecar for ${target} is required for train ${trainVersion}`
     ),
     ...versionDiagnostic(
       "examples_version_mismatch",
@@ -330,42 +380,46 @@ function releaseTrainPreflightValue(document: unknown): ReleaseTrainManifestV01 
   return candidate as ReleaseTrainManifestV01;
 }
 
+function releaseTrainValidationResultForValue(
+  value: ReleaseTrainManifestV01,
+  options: ValidateReleaseTrainManifestOptions
+): ReleaseTrainManifestValidationResult {
+  const diagnostics = [...componentVersionDiagnostics(value, options), ...sdkToolingDiagnostics(value, options)];
+
+  if (diagnostics.length > 0) {
+    return { ok: false, value, diagnostics };
+  }
+
+  return { ok: true, value, diagnostics: [] };
+}
+
 export function validateReleaseTrainManifestForSdk(
   document: unknown,
   options: ValidateReleaseTrainManifestOptions = {}
 ): ReleaseTrainManifestValidationResult {
   const validation = validateReleaseTrainManifestV01(document);
-  if (!validation.ok) {
-    const candidate = releaseTrainPreflightValue(document);
-    const sdkDiagnostics =
-      candidate === undefined
-        ? []
-        : [...componentVersionDiagnostics(candidate, options), ...sdkToolingDiagnostics(candidate, options)];
-
-    return {
-      ok: false,
-      ...(candidate === undefined ? {} : { value: candidate }),
-      diagnostics: [
-        ...validation.errors.map((error) => ({
-          code: "invalid_manifest",
-          component: "manifest",
-          message: `release train manifest does not match skenion.release-train 0.1.0: ${error}`
-        }) satisfies ReleaseTrainDiagnostic),
-        ...sdkDiagnostics
-      ]
-    };
+  if (validation.ok) {
+    return releaseTrainValidationResultForValue(validation.value, options);
   }
 
-  const diagnostics = [
-    ...componentVersionDiagnostics(validation.value, options),
-    ...sdkToolingDiagnostics(validation.value, options)
-  ];
+  const candidate = releaseTrainPreflightValue(document);
+  const sdkDiagnostics =
+    candidate === undefined
+      ? []
+      : [...componentVersionDiagnostics(candidate, options), ...sdkToolingDiagnostics(candidate, options)];
 
-  if (diagnostics.length > 0) {
-    return { ok: false, value: validation.value, diagnostics };
-  }
-
-  return { ok: true, value: validation.value, diagnostics: [] };
+  return {
+    ok: false,
+    ...(candidate === undefined ? {} : { value: candidate }),
+    diagnostics: [
+      ...validation.errors.map((error) => ({
+        code: "invalid_manifest",
+        component: "manifest",
+        message: `release train manifest does not match skenion.release-train 0.1.0: ${error}`
+      }) satisfies ReleaseTrainDiagnostic),
+      ...sdkDiagnostics
+    ]
+  };
 }
 
 export function readReleaseTrainManifest(

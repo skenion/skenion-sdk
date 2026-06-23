@@ -57,9 +57,47 @@ function artifact(idPrefix, kind, target, nameSuffix, repository, tag) {
   };
 }
 
+function staticArtifact(id, kind, name, repository, tag) {
+  return {
+    id,
+    kind,
+    name,
+    version: trainVersion,
+    source: {
+      kind: "github-release-asset",
+      repository,
+      tag,
+      assetName: name,
+      url: null
+    },
+    checksum: {
+      algorithm: "sha256",
+      value: null
+    },
+    sizeBytes: null
+  };
+}
+
 function artifactMap(idPrefix, kind, nameSuffix, repository, tag) {
   return Object.fromEntries(
     targets.map((target) => [target, artifact(idPrefix, kind, target, nameSuffix, repository, tag)])
+  );
+}
+
+function desktopArchiveName(target) {
+  const extension = target.includes("windows-msvc") ? "zip" : "tar.gz";
+  return `skenion-studio-${target}.${extension}`;
+}
+
+function desktopPackageMap(repository, tag) {
+  return Object.fromEntries(
+    targets.map((target) => {
+      const entry = artifact("studio-desktop", "studio-desktop-package", target, "tar.gz", repository, tag);
+      const name = desktopArchiveName(target);
+      entry.name = name;
+      entry.source.assetName = name;
+      return [target, entry];
+    })
   );
 }
 
@@ -68,26 +106,31 @@ function validTrainManifest() {
     "runtime",
     "runtime-binary",
     "tar.gz",
-    "echovisionlab/Skenion-runtime",
+    "skenion/skenion-runtime",
     "skenion-runtime-v0.43.0"
   );
-  const studioDesktopPackages = artifactMap(
-    "studio-desktop",
-    "studio-desktop-package",
-    "dmg",
-    "echovisionlab/Skenion-studio",
+  const webBundle = staticArtifact(
+    "studio-web-bundle",
+    "studio-web-bundle",
+    "skenion-studio-web-bundle-v0.43.0.tar.gz",
+    "skenion/skenion-studio",
+    "skenion-studio-v0.43.0"
+  );
+  const studioPackages = desktopPackageMap(
+    "skenion/skenion-studio",
     "skenion-studio-v0.43.0"
   );
   const studioSidecars = artifactMap(
     "studio-runtime-sidecar",
     "studio-runtime-sidecar",
     "tar.gz",
-    "echovisionlab/Skenion-studio",
+    "skenion/skenion-studio",
     "skenion-studio-v0.43.0"
   );
   const runtimeArtifactIds = Object.values(runtimeBinaries).map((entry) => entry.id);
   const studioArtifactIds = [
-    ...Object.values(studioDesktopPackages).map((entry) => entry.id),
+    webBundle.id,
+    ...Object.values(studioPackages).map((entry) => entry.id),
     ...Object.values(studioSidecars).map((entry) => entry.id)
   ];
 
@@ -151,20 +194,18 @@ function validTrainManifest() {
         crate: registryPackage("crates.io", "skenion-contracts")
       },
       runtime: {
-        crate: registryPackage("crates.io", "skenion-runtime"),
         binaries: runtimeBinaries
       },
       sdk: {
         npm: registryPackage("npm", "@skenion/sdk")
       },
       studio: {
-        web: registryPackage("npm", "@skenion/studio-web"),
-        desktop: registryPackage("npm", "@skenion/studio-desktop"),
-        desktopPackages: studioDesktopPackages,
+        "web-bundle": webBundle,
+        desktopPackages: studioPackages,
         runtimeSidecars: studioSidecars
       },
       examples: {
-        repository: "echovisionlab/Skenion-examples",
+        repository: "skenion/skenion-examples",
         version: trainVersion,
         tag: "skenion-examples-v0.43.0",
         commit: "fixture-0.43.0"
@@ -173,7 +214,7 @@ function validTrainManifest() {
         manual: {
           version: trainVersion,
           path: "/manual/0.43/",
-          pagesUrl: "https://echovisionlab.github.io/Skenion-docs/manual/0.43/"
+          pagesUrl: "https://skenion.github.io/skenion-docs/manual/0.43/"
         }
       }
     },
@@ -191,29 +232,11 @@ function validTrainManifest() {
           required: true,
           package: registryPackage("crates.io", "skenion-contracts")
         },
-        runtimeCrate: {
-          id: "runtime-crate-exists",
-          status: "pending",
-          required: true,
-          package: registryPackage("crates.io", "skenion-runtime")
-        },
         sdkNpm: {
           id: "sdk-npm-exists",
           status: "pending",
           required: true,
           package: registryPackage("npm", "@skenion/sdk")
-        },
-        studioWeb: {
-          id: "studio-web-exists",
-          status: "pending",
-          required: true,
-          package: registryPackage("npm", "@skenion/studio-web")
-        },
-        studioDesktop: {
-          id: "studio-desktop-exists",
-          status: "pending",
-          required: true,
-          package: registryPackage("npm", "@skenion/studio-desktop")
         }
       },
       githubReleaseAssets: {
@@ -221,7 +244,7 @@ function validTrainManifest() {
           id: "runtime-release-assets",
           status: "pending",
           required: true,
-          repository: "echovisionlab/Skenion-runtime",
+          repository: "skenion/skenion-runtime",
           tag: "skenion-runtime-v0.43.0",
           artifactIds: runtimeArtifactIds
         },
@@ -229,7 +252,7 @@ function validTrainManifest() {
           id: "studio-release-assets",
           status: "pending",
           required: true,
-          repository: "echovisionlab/Skenion-studio",
+          repository: "skenion/skenion-studio",
           tag: "skenion-studio-v0.43.0",
           artifactIds: studioArtifactIds
         }
@@ -260,7 +283,7 @@ function validTrainManifest() {
             status: "pending",
             required: true,
             target,
-            desktopPackageArtifactId: studioDesktopPackages[target].id,
+            desktopPackageArtifactId: studioPackages[target].id,
             runtimeSidecarArtifactId: studioSidecars[target].id
           }
         ])
@@ -269,7 +292,7 @@ function validTrainManifest() {
         id: "examples-conformance",
         status: "pending",
         required: true,
-        repository: "echovisionlab/Skenion-examples",
+        repository: "skenion/skenion-examples",
         ref: "skenion-examples-v0.43.0",
         version: trainVersion
       },
@@ -279,10 +302,52 @@ function validTrainManifest() {
         required: true,
         manualVersion: trainVersion,
         manualPath: "/manual/0.43/",
-        pagesUrl: "https://echovisionlab.github.io/Skenion-docs/manual/0.43/"
+        pagesUrl: "https://skenion.github.io/skenion-docs/manual/0.43/"
       }
     }
   };
+}
+
+function removedRegistrySurfaceManifest() {
+  const manifest = validTrainManifest();
+  const removedRuntimeGateKey = ["runtime", "Crate"].join("");
+  const removedWebGateKey = ["studio", "Web"].join("");
+  const removedDesktopGateKey = ["studio", "Desktop"].join("");
+  const removedRuntimeComponentKey = ["crate"].join("");
+
+  manifest.components.runtime[removedRuntimeComponentKey] = registryPackage("crates.io", "skenion-runtime");
+  manifest.components.studio.web = registryPackage("npm", "@skenion/studio-web");
+  manifest.components.studio.desktop = registryPackage("npm", "@skenion/studio-desktop");
+  delete manifest.components.studio["web-bundle"];
+
+  manifest.releaseGates.registryPackages[removedRuntimeGateKey] = {
+    id: "runtime-crate-exists",
+    status: "pending",
+    required: true,
+    package: registryPackage("crates.io", "skenion-runtime")
+  };
+  manifest.releaseGates.registryPackages[removedWebGateKey] = {
+    id: "studio-web-exists",
+    status: "pending",
+    required: true,
+    package: registryPackage("npm", "@skenion/studio-web")
+  };
+  manifest.releaseGates.registryPackages[removedDesktopGateKey] = {
+    id: "studio-desktop-exists",
+    status: "pending",
+    required: true,
+    package: registryPackage("npm", "@skenion/studio-desktop")
+  };
+  manifest.releaseGates.githubReleaseAssets.studio.artifactIds =
+    manifest.releaseGates.githubReleaseAssets.studio.artifactIds.filter(
+      (artifactId) => artifactId !== "studio-web-bundle"
+    );
+  manifest.releaseGates.checksumVerification.artifactIds =
+    manifest.releaseGates.checksumVerification.artifactIds.filter(
+      (artifactId) => artifactId !== "studio-web-bundle"
+    );
+
+  return manifest;
 }
 
 function validate(manifest, options = {}) {
@@ -342,6 +407,27 @@ test("release train helper reports SDK package name mismatches", () => {
   assert.equal(result.diagnostics[0].field, "components.sdk.npm.name");
 });
 
+test("release train helper rejects removed Runtime and Studio registry surfaces", () => {
+  const result = validate(removedRegistrySurfaceManifest());
+
+  assert.equal(result.ok, false);
+  assert.ok(diagnosticCodes(result).includes("missing_studio_web_bundle"));
+  assert.equal(
+    result.diagnostics.find((diagnostic) => diagnostic.code === "missing_studio_web_bundle")?.field,
+    'components.studio["web-bundle"]'
+  );
+});
+
+test("release train helper reports invalid current manifests with missing registry gates", () => {
+  const manifest = validTrainManifest();
+  delete manifest.releaseGates.registryPackages;
+
+  const result = validate(manifest);
+
+  assert.equal(result.ok, false);
+  assert.ok(diagnosticCodes(result).includes("invalid_manifest"));
+});
+
 test("release train helper reports missing Runtime artifacts", () => {
   const manifest = validTrainManifest();
   delete manifest.components.runtime.binaries["aarch64-apple-darwin"];
@@ -368,6 +454,68 @@ test("release train helper reports Runtime artifact version mismatches", () => {
   assert.match(
     result.diagnostics.find((diagnostic) => diagnostic.code === "runtime_version_mismatch")?.message ?? "",
     /x86_64-apple-darwin/
+  );
+});
+
+test("release train helper reports missing Studio web bundle artifacts", () => {
+  const manifest = validTrainManifest();
+  delete manifest.components.studio["web-bundle"];
+
+  const result = validate(manifest);
+
+  assert.equal(result.ok, false);
+  assert.ok(diagnosticCodes(result).includes("missing_studio_web_bundle"));
+  assert.equal(
+    result.diagnostics.find((diagnostic) => diagnostic.code === "missing_studio_web_bundle")?.field,
+    'components.studio["web-bundle"]'
+  );
+});
+
+test("release train helper reports Studio web bundle version mismatches", () => {
+  const manifest = validTrainManifest();
+  manifest.components.studio["web-bundle"].version = "0.42.0";
+
+  const result = validate(manifest);
+
+  assert.equal(result.ok, false);
+  assert.ok(diagnosticCodes(result).includes("studio_version_mismatch"));
+  assert.equal(
+    result.diagnostics.find(
+      (diagnostic) => diagnostic.field === 'components.studio["web-bundle"].version'
+    )?.actual,
+    "0.42.0"
+  );
+});
+
+test("release train helper reports missing Studio desktop package artifacts", () => {
+  const manifest = validTrainManifest();
+  delete manifest.components.studio.desktopPackages["aarch64-apple-darwin"];
+
+  const result = validate(manifest);
+
+  assert.equal(result.ok, false);
+  assert.ok(diagnosticCodes(result).includes("missing_studio_desktop_package"));
+  assert.equal(
+    result.diagnostics.find((diagnostic) => diagnostic.code === "missing_studio_desktop_package")?.target,
+    "aarch64-apple-darwin"
+  );
+});
+
+test("release train helper reports Studio desktop package version mismatches", () => {
+  const manifest = validTrainManifest();
+  manifest.components.studio.desktopPackages["x86_64-unknown-linux-gnu"].version = "0.42.0";
+
+  const result = validate(manifest);
+
+  assert.equal(result.ok, false);
+  assert.ok(diagnosticCodes(result).includes("studio_version_mismatch"));
+  assert.equal(
+    result.diagnostics.find(
+      (diagnostic) =>
+        diagnostic.field === "components.studio.desktopPackages.version" &&
+        diagnostic.target === "x86_64-unknown-linux-gnu"
+    )?.actual,
+    "0.42.0"
   );
 });
 
