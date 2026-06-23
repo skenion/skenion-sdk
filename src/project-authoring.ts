@@ -114,7 +114,7 @@ export class SkenionProjectAuthoringError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion 0.1 authoring value: ${errors.join("; ")}`);
+    super(`Invalid skenion 0.1 authoring value: ${errors.join("; ")}`);
     this.name = "SkenionProjectAuthoringError";
     this.errors = errors;
   }

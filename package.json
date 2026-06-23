@@ -1,17 +1,17 @@
 {
   "name": "@skenion/sdk",
   "version": "0.43.0",
-  "description": "TypeScript SDK for Skenion node authoring and runtime clients",
+  "description": "TypeScript SDK for skenion node authoring and runtime clients",
   "type": "module",
   "license": "Apache-2.0",
   "sideEffects": false,
-  "homepage": "https://github.com/echovisionlab/skenion-sdk#readme",
+  "homepage": "https://github.com/skenion/skenion-sdk#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/echovisionlab/skenion-sdk.git"
+    "url": "git+https://github.com/skenion/skenion-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/echovisionlab/skenion-sdk/issues"
+    "url": "https://github.com/skenion/skenion-sdk/issues"
   },
   "publishConfig": {
     "access": "public"

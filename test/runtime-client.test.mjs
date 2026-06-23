@@ -41,7 +41,7 @@ const localManagedProfile = {
   process: {
     ownedByHost: true,
     pid: 41820,
-    executablePath: "/Applications/Skenion Studio.app/Contents/Resources/skenion-runtime",
+    executablePath: "/Applications/skenion Studio.app/Contents/Resources/skenion-runtime",
     workingDirectory: "/var/folders/skenion/session-a",
     startedAt: "2026-06-22T00:00:00.000Z",
     ownerWindowId: "window-a",

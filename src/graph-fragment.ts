@@ -81,7 +81,7 @@ export class SkenionGraphFragmentError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion graph fragment: ${errors.join("; ")}`);
+    super(`Invalid skenion graph fragment: ${errors.join("; ")}`);
     this.name = "SkenionGraphFragmentError";
     this.errors = errors;
   }
@@ -91,7 +91,7 @@ export class SkenionPasteRequestError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion paste request: ${errors.join("; ")}`);
+    super(`Invalid skenion paste request: ${errors.join("; ")}`);
     this.name = "SkenionPasteRequestError";
     this.errors = errors;
   }
@@ -101,7 +101,7 @@ export class SkenionPasteResponseError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion paste response: ${errors.join("; ")}`);
+    super(`Invalid skenion paste response: ${errors.join("; ")}`);
     this.name = "SkenionPasteResponseError";
     this.errors = errors;
   }

@@ -22,16 +22,16 @@ jobs:
         shell: bash
         run: |
           branch="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
-          if git ls-remote --exit-code --heads https://github.com/echovisionlab/skenion-contracts.git "refs/heads/${branch}" >/dev/null; then
+          if git ls-remote --exit-code --heads https://github.com/skenion/skenion-contracts.git "refs/heads/${branch}" >/dev/null; then
             ref="${branch}"
           else
             ref="main"
           fi
           echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
-          echo "Using echovisionlab/skenion-contracts@${ref}"
+          echo "Using skenion/skenion-contracts@${ref}"
       - uses: actions/checkout@v6
         with:
-          repository: echovisionlab/skenion-contracts
+          repository: skenion/skenion-contracts
           ref: ${{ steps.contracts.outputs.ref }}
           path: .deps/skenion-contracts
       - uses: pnpm/action-setup@v6

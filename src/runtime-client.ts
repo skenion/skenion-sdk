@@ -164,7 +164,7 @@ export class SkenionRuntimeClientError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion Runtime client value: ${errors.join("; ")}`);
+    super(`Invalid skenion runtime client value: ${errors.join("; ")}`);
     this.name = "SkenionRuntimeClientError";
     this.errors = errors;
   }
@@ -174,7 +174,7 @@ export class SkenionRuntimeSessionInfoError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion Runtime session info: ${errors.join("; ")}`);
+    super(`Invalid skenion runtime session info: ${errors.join("; ")}`);
     this.name = "SkenionRuntimeSessionInfoError";
     this.errors = errors;
   }
@@ -184,7 +184,7 @@ export class SkenionRuntimeSessionEventError extends Error {
   readonly errors: string[];
 
   constructor(errors: string[]) {
-    super(`Invalid Skenion Runtime session event: ${errors.join("; ")}`);
+    super(`Invalid skenion runtime session event: ${errors.join("; ")}`);
     this.name = "SkenionRuntimeSessionEventError";
     this.errors = errors;
   }
