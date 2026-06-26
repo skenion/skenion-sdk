@@ -29,14 +29,25 @@ becoming a separate contract source of truth. Prefer helpers that consume
 `@skenion/contracts` exports and produce current-version packages, patch
 libraries, manifests, and extension scaffolds.
 
+## Local Contracts Integration
+
+Keep committed dependency manifests registry-first. Do not commit `file:`,
+`link:`, workspace, path, or GitHub URL dependencies for `@skenion/contracts`.
+Use `pnpm run check:local-contracts -- --contracts-path <packages/ts path>` for
+explicit local source integration. The script may use the sibling checkout
+defaults, verifies local package metadata and git evidence, temporarily
+overrides `node_modules/@skenion/contracts`, runs SDK `ci`, and restores the
+registry install without modifying `package.json` or `pnpm-lock.yaml`. Release
+jobs must not use this path; `SKENION_RELEASE_MODE=1` fails closed.
+
 ## Component Releases And Compatibility Matrices
 
 Release Please owns natural component releases for this repository. The hub
 verifies and promotes compatibility matrices; it does not conduct component
 releases or require SDK, Contracts, Runtime, Studio, docs, and examples to
 publish the same product version. SDK release work must declare the Contracts
-compatibility line it supports: supporting Contracts `0.45` means supporting
-`>=0.45.0 <0.46.0`, while SDK may release at its own component version.
+compatibility line it supports: supporting Contracts `0.49` means supporting
+`>=0.49.0 <0.50.0`, while SDK may release at its own component version.
 Publishing must happen only through GitHub Actions release workflows and Release
 Please, not local npm publishing.
 
