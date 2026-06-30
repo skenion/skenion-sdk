@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.49.0](https://github.com/skenion/skenion-sdk/compare/v0.48.0...v0.49.0) (2026-06-30)
+
+
+### Features
+
+* **sdk:** add object box authoring helpers ([9a88af0](https://github.com/skenion/skenion-sdk/commit/9a88af02fabac4cba2e254d5fff3e16c979cf9ab))
+
 ## [0.48.0](https://github.com/skenion/skenion-sdk/compare/v0.47.0...v0.48.0) (2026-06-29)
 
 
