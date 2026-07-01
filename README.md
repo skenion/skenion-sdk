@@ -26,7 +26,7 @@ project, patch-library, graph-fragment, and package contracts:
 - `defineNodeDefinition()` creates current `0.1` implementation definition
   manifests.
 - `defineObject()` and `definePackageManifest()` create current package
-  manifests with `provides.objects[]` as the object-box authoring surface.
+  manifests with `provides.objects[]` as the object authoring surface.
 - `objectSpecForCatalogEntry()`, `createObjectNodeFromCatalogEntry()`, and
   `resolveCatalogObjectSpec()` bridge package/catalog exports into graph nodes.
 - `defineExtensionPackage()` creates legacy extension manifests and rejects
@@ -153,7 +153,7 @@ const manifest = definePackageManifest({
 
 Short object specs are the user-facing syntax. Package provider and `objectId`
 values identify the stored implementation selected by catalog/package
-resolution; they are not the default text users type into an object box.
+resolution; they are not the default text users type for an object.
 
 ## Runtime Session Helpers
 
