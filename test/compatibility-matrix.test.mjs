@@ -7,8 +7,8 @@ import {
   validateCompatibilityMatrixForSdk
 } from "../dist/index.js";
 
-const contractsRange = ">=0.57.0 <0.58.0";
-const contractsVersion = "0.57.0";
+const contractsRange = ">=0.58.0 <0.59.0";
+const contractsVersion = "0.58.0";
 const sdkVersion = "0.44.0";
 
 function registryPackage(ecosystem, name, version) {
@@ -23,8 +23,8 @@ function validCompatibilityMatrix() {
   return {
     schema: "skenion.compatibility-matrix",
     "schema-version": "0.1.0",
-    "matrix-id": "M06.95-0.57.0",
-    "contracts-line": "0.57",
+    "matrix-id": "M06.95-0.58.0",
+    "contracts-line": "0.58",
     "contracts-range": contractsRange,
     "protocol-baselines": {
       graph: "0.1",
@@ -66,7 +66,7 @@ function issueCodes(result) {
   return result.issues.map((issue) => issue.code);
 }
 
-test("compatibility matrix helper accepts unequal SDK and Contracts component versions on the 0.57 line", () => {
+test("compatibility matrix helper accepts unequal SDK and Contracts component versions on the 0.58 line", () => {
   const matrix = validCompatibilityMatrix();
   const result = validate(matrix);
 
@@ -82,10 +82,10 @@ test("compatibility matrix helper accepts unequal SDK and Contracts component ve
   })["contracts-range"], contractsRange);
 });
 
-test("compatibility matrix helper accepts the explicit Contracts 0.57 peer range", () => {
+test("compatibility matrix helper accepts the explicit Contracts 0.58 peer range", () => {
   const result = validate(validCompatibilityMatrix(), {
-    contractsDependencyRange: ">=0.57.0 <0.58.0",
-    contractsPackageVersion: "0.57.0"
+    contractsDependencyRange: ">=0.58.0 <0.59.0",
+    contractsPackageVersion: "0.58.0"
   });
 
   assert.equal(result.ok, true);
@@ -131,7 +131,7 @@ test("compatibility matrix helper rejects incompatible installed Contracts versi
 
   assert.equal(result.ok, false);
   assert.deepEqual(issueCodes(result), ["incompatible_contracts_package_version"]);
-  assert.match(result.issues[0].message, />=0\.57\.0 <0\.58\.0/);
+  assert.match(result.issues[0].message, />=0\.58\.0 <0\.59\.0/);
 });
 
 test("compatibility matrix helper rejects SDK package metadata mismatches without comparing to Contracts version", () => {

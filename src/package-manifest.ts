@@ -22,8 +22,8 @@ import {
 
 const CURRENT_SCHEMA_VERSION = "0.1.0";
 const DEFAULT_CONTRACTS_SUPPORT: PackageContractsSupportV01 = {
-  line: "0.57",
-  range: ">=0.57.0 <0.58.0"
+  line: "0.58",
+  range: ">=0.58.0 <0.59.0"
 };
 
 export interface DefinedObjectDisplayOptions {

@@ -72,7 +72,7 @@ test("object package helpers author provides.objects without teaching nodes as o
 
   const manifest = definePackageManifest({
     id: "skenion/core",
-    version: "0.57.0",
+    version: "0.58.0",
     objects: [oscillator, manipulator],
     help: [
       {
@@ -86,7 +86,7 @@ test("object package helpers author provides.objects without teaching nodes as o
 
   assert.equal(oscillator.primaryObjectSpec, "osc~ 440");
   assert.deepEqual(oscillator.aliases, ["osc~"]);
-  assert.equal(manifest.contracts.range, ">=0.57.0 <0.58.0");
+  assert.equal(manifest.contracts.range, ">=0.58.0 <0.59.0");
   assert.equal(manifest.provides.objects?.[0].objectId, "oscillator");
   assert.equal(manifest.provides.objects?.[0].primaryObjectSpec, "osc~ 440");
   assert.equal(manifest.provides.objects?.[0].helpId, "help.oscillator");
@@ -109,7 +109,7 @@ test("package manifest helper requires object helpId to resolve to provided help
     () =>
       definePackageManifest({
         id: "skenion/core",
-        version: "0.57.0",
+        version: "0.58.0",
         objects: [oscillator]
       }),
     SkenionPackageManifestError
@@ -119,14 +119,14 @@ test("package manifest helper requires object helpId to resolve to provided help
 test("package manifest helper preserves optional package fields for native manifests", () => {
   const manifest = definePackageManifest({
     id: "example/native-audio",
-    version: "0.57.0",
+    version: "0.58.0",
     displayName: "Native Audio",
     category: "native",
     contracts: {
-      line: "0.57",
-      range: ">=0.57.0 <0.58.0"
+      line: "0.58",
+      range: ">=0.58.0 <0.59.0"
     },
-    runtimeAbiRange: ">=0.57.0 <0.58.0",
+    runtimeAbiRange: ">=0.58.0 <0.59.0",
     targets: ["aarch64-apple-darwin"],
     patches: [
       {
@@ -166,7 +166,7 @@ test("package manifest helper preserves optional package fields for native manif
 
   assert.equal(manifest.displayName, "Native Audio");
   assert.equal(manifest.category, "native");
-  assert.equal(manifest.runtimeAbiRange, ">=0.57.0 <0.58.0");
+  assert.equal(manifest.runtimeAbiRange, ">=0.58.0 <0.59.0");
   assert.equal(manifest.targets?.[0], "aarch64-apple-darwin");
   assert.equal(manifest.provides.patches?.[0].id, "help.oscillator");
   assert.equal(manifest.provides.resources?.[0].id, "wavetable.default");
@@ -203,7 +203,7 @@ test("package helpers reject invalid specs, definitions, and incomplete manifest
     () =>
       definePackageManifest({
         id: "skenion/core",
-        version: "0.57.0"
+        version: "0.58.0"
       }),
     SkenionPackageManifestError
   );

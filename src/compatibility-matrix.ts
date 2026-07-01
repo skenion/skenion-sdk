@@ -5,7 +5,7 @@ import {
 } from "@skenion/contracts";
 import type { CompatibilityMatrixV01 } from "@skenion/contracts";
 
-export const SDK_SUPPORTED_CONTRACTS_RANGE = deriveV0CompatibilityRange("0.57.0");
+export const SDK_SUPPORTED_CONTRACTS_RANGE = deriveV0CompatibilityRange("0.58.0");
 
 export type CompatibilityMatrixIssueCode =
   | "invalid_matrix"
